@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ServerHysteria;
+use App\Models\ServerNaive;
 use App\Models\ServerLog;
 use App\Models\ServerRoute;
 use App\Models\ServerShadowsocks;
@@ -121,6 +122,31 @@ class ServerService
         return $availableServers;
     }
 
+    // 获取可用的 NAIVE 服务器列表
+    public static function getAvailableNaive(User $user)
+    {
+        $availableServers = [];
+        $model = ServerNaive::orderBy('sort', 'ASC');
+        $servers = $model->get()->keyBy('id');
+        foreach ($servers as $key => $v) {
+            if (!$v['show']) continue;
+            $servers[$key]['type'] = 'naive';
+            $servers[$key]['last_check_at'] = Cache::get(CacheKey::get('SERVER_NAIVE_LAST_CHECK_AT', $v['id']));
+            if (!in_array($user->group_id, $v['group_id'])) continue;
+            if (strpos($v['port'], '-') !== false) {
+                $servers[$key]['ports'] = $v['port'];
+                $servers[$key]['port'] = Helper::randomPort($v['port']);
+            }
+            if (isset($servers[$v['parent_id']])) {
+                $servers[$key]['last_check_at'] = Cache::get(CacheKey::get('SERVER_NAIVE_LAST_CHECK_AT', $v['parent_id']));
+                $servers[$key]['created_at'] = $servers[$v['parent_id']]['created_at'];
+            }
+            $servers[$key]['server_key'] = Helper::getServerKey($servers[$key]['created_at'], 16);
+            $availableServers[] = $servers[$key]->toArray();
+        }
+        return $availableServers;
+    }
+
     // 获取可用的 SHADOWSOCKS 服务器列表
     public static function getAvailableShadowsocks(User $user)
     {
@@ -180,6 +206,7 @@ class ServerService
                 self::getAvailableVmess($user),
                 self::getAvailableTrojan($user),
                 self::getAvailableHysteria($user),
+                self::getAvailableNaive($user),
                 self::getAvailableVless($user)
             );
         });
@@ -305,6 +332,18 @@ class ServerService
         return $servers;
     }
 
+    // 获取所有 NAIVE 服务器列表
+    public static function getAllNaive()
+    {
+        $servers = ServerNaive::orderBy('sort', 'ASC')
+            ->get()
+            ->toArray();
+        foreach ($servers as $k => $v) {
+            $servers[$k]['type'] = 'naive';
+        }
+        return $servers;
+    }
+
     // 合并数据
     private static function mergeData(&$servers)
     {
@@ -338,6 +377,7 @@ class ServerService
             self::getAllVMess(),
             self::getAllTrojan(),
             self::getAllHysteria(),
+            self::getAllNaive(),
             self::getAllVLess()
         );
         self::mergeData($servers);
@@ -371,6 +411,8 @@ class ServerService
                 return ServerTrojan::find($serverId);
             case 'hysteria':
                 return ServerHysteria::find($serverId);
+            case 'naive':
+                return ServerNaive::find($serverId);
             case 'vless':
                 return ServerVless::find($serverId);
             default:
@@ -398,6 +440,11 @@ class ServerService
                         ->first();
             case 'hysteria':
                 return ServerHysteria::query()
+                        ->where("parent_id", $serverId)
+                        ->where('ips',"like", "%\"$nodeIp\"%")
+                        ->first();
+            case 'naive':
+                return ServerNaive::query()
                         ->where("parent_id", $serverId)
                         ->where('ips',"like", "%\"$nodeIp\"%")
                         ->first();

@@ -23,6 +23,7 @@ class ManageController extends Controller
                 'vmess',
                 'trojan',
                 'hysteria',
+                'naive',
                 'vless'
             ) ?? [];
         try{

@@ -16,6 +16,9 @@ class AddColumnIpsToServerTable extends Migration
         Schema::table('v2_server_hysteria', function (Blueprint $table) {
             $table->string("ips")->nullable()->after('excludes');
         });
+        Schema::table('v2_server_naive', function (Blueprint $table) {
+            $table->string("ips")->nullable()->after('excludes');
+        });
         Schema::table('v2_server_shadowsocks', function (Blueprint $table) {
             $table->string("ips")->nullable()->after('excludes');
         });
@@ -38,6 +41,9 @@ class AddColumnIpsToServerTable extends Migration
     public function down()
     {
         Schema::table('v2_server_hysteria', function (Blueprint $table) {
+            $table->dropColumn('ips');
+        });
+        Schema::table('v2_server_naive', function (Blueprint $table) {
             $table->dropColumn('ips');
         });
         Schema::table('v2_server_shadowsocks', function (Blueprint $table) {

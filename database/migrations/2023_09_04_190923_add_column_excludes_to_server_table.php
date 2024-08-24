@@ -16,6 +16,9 @@ class AddColumnExcludesToServerTable extends Migration
         Schema::table('v2_server_hysteria', function (Blueprint $table) {
             $table->text("excludes")->nullable()->after('tags');
         });
+        Schema::table('v2_server_naive', function (Blueprint $table) {
+            $table->text("excludes")->nullable()->after('tags');
+        });
         Schema::table('v2_server_shadowsocks', function (Blueprint $table) {
             $table->text("excludes")->nullable()->after('tags');
         });
@@ -38,6 +41,9 @@ class AddColumnExcludesToServerTable extends Migration
     public function down()
     {
         Schema::table('v2_server_hysteria', function (Blueprint $table) {
+            $table->dropColumn('excludes');
+        });
+        Schema::table('v2_server_naive', function (Blueprint $table) {
             $table->dropColumn('excludes');
         });
         Schema::table('v2_server_shadowsocks', function (Blueprint $table) {

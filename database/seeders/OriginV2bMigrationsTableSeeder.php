@@ -164,7 +164,13 @@ class OriginV2bMigrationsTableSeeder extends Seeder
                 'id' => 24,
                 'migration' => '2023_08_07_205816_create_v2_user_table',
                 'batch' => 1,
-            )
+            ),
+            24 => 
+            array (
+                'id' => 25,
+                'migration' => '2023_08_07_205816_create_v2_server_naive_table',
+                'batch' => 1,
+            ),
         ));
     }
 }
